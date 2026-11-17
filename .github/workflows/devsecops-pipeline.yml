@@ -69,3 +69,43 @@ jobs:
           name: sbom-cyclonedx
           path: sbom.cyclonedx.json
           if-no-files-found: error
+
+      - name: Preparar directorios de SCA
+        run: |
+          mkdir -p reports
+          mkdir -p "$RUNNER_TEMP/dependency-check-data"
+
+      - name: OWASP Dependency-Check
+        env:
+          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+        shell: bash
+        run: |
+          args=(
+            --project "NodeGoat"
+            --scan /src
+            --format HTML
+            --format JSON
+            --out /report
+            --failOnCVSS 7
+            --enableExperimental
+          )
+
+          if [[ -n "$NVD_API_KEY" ]]; then
+            args+=(--nvdApiKey "$NVD_API_KEY")
+          fi
+
+          docker run --rm \
+            --user "$(id -u):$(id -g)" \
+            -v "$GITHUB_WORKSPACE:/src:ro" \
+            -v "$GITHUB_WORKSPACE/reports:/report" \
+            -v "$RUNNER_TEMP/dependency-check-data:/usr/share/dependency-check/data" \
+            owasp/dependency-check:latest \
+            "${args[@]}"
+
+      - name: Publicar reporte SCA
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-check-report
+          path: reports/
+          if-no-files-found: warn
