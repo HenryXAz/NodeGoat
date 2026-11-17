@@ -46,3 +46,26 @@ jobs:
           name: semgrep-sarif-report
           path: semgrep-results.sarif
           if-no-files-found: warn
+
+  sca-and-sbom:
+    name: SCA y generacion de SBOM
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Descargar repositorio
+        uses: actions/checkout@v4
+
+      - name: Generar SBOM CycloneDX
+        uses: anchore/sbom-action@v0
+        with:
+          path: .
+          format: cyclonedx-json
+          output-file: sbom.cyclonedx.json
+          upload-artifact: false
+
+      - name: Publicar SBOM
+        uses: actions/upload-artifact@v4
+        with:
+          name: sbom-cyclonedx
+          path: sbom.cyclonedx.json
+          if-no-files-found: error
