@@ -1,0 +1,26 @@
+name: DevSecOps Pipeline
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verificar-repositorio:
+    name: Verificar repositorio
+    runs-on: ubuntu-latest
+
+  steps:
+    - name: Descargar código
+      uses: actions/checkout@v4
+
+    - name: Mostrar archivos
+      run: |
+        echo "Verificando repositorio..."
+        ls -la
+        echo "Preparación completada"
